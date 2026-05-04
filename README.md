@@ -1,4 +1,4 @@
-## player-rs
+## kokoro-rs
 simple audio player made using Rust+Slint 
 
 ## preview
