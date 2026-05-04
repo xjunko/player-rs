@@ -2,6 +2,7 @@
 simple audio player made using Rust+Slint 
 
 ## preview
+![](ext/2.png)
 ![](ext/1.png)
 
 ## why

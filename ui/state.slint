@@ -1,8 +1,4 @@
-export struct Track {
-    artist: string,
-    title: string,
-    path: string,
-}
+export struct Track { artist: string, title: string, path: string, cover: image, cover_path: string}
 
 export global State {
     in property <Track> track;

@@ -1,5 +1,6 @@
 use std::cell::RefCell;
 use std::rc::Rc;
+use std::sync::mpsc;
 use std::time::Duration;
 
 use anyhow::Result;
@@ -8,13 +9,22 @@ use walkdir::WalkDir;
 
 use crate::{AppWindow, Args, State, Track, utils};
 
+struct CoverUpdate {
+    track_path: String,
+    cover_data: Option<utils::SmallImageData>,
+}
+
 pub struct Application {
     weak: slint::Weak<AppWindow>,
     sink: Rc<rodio::Player>,
     timer: slint::Timer,
 
     track_i: RefCell<usize>,
+    current_track_path: RefCell<String>,
     tracks: Vec<Track>,
+
+    cover_tx: mpsc::Sender<CoverUpdate>,
+    cover_rx: RefCell<mpsc::Receiver<CoverUpdate>>,
 }
 
 impl Application {
@@ -56,6 +66,33 @@ impl Application {
                     "mp3" | "flac" | "ogg" | "m4a" | "opus" | "wav"
                 )
             {
+                // this is a bit scuffed, but basically
+                // 1. we check if theres any embedded image, if there is, we set the cover_path to something that isnt empty.
+                // 2. if not, we look for nearby album art, and if we find it, we set the cover_path to that.
+                let mut cover_path = String::new();
+                let parent_folder = entry.path().parent().unwrap();
+
+                if utils::has_embedded_cover(
+                    entry.path().to_str().unwrap_or(""),
+                ) {
+                    cover_path = "embedded".to_string();
+                } else {
+                    if let Some(album_art_path) =
+                        utils::find_album_art_nearby(parent_folder)
+                    {
+                        cover_path =
+                            album_art_path.to_string_lossy().into_owned();
+                    }
+                }
+
+                if !cover_path.is_empty() {
+                    println!(
+                        "Found cover for {}: {}",
+                        entry.path().display(),
+                        cover_path
+                    );
+                }
+
                 tracks.push(Track {
                     artist: entry
                         .path()
@@ -72,17 +109,23 @@ impl Application {
                         .into_owned()
                         .into(),
                     path: entry.path().to_string_lossy().into_owned().into(),
+                    cover: slint::Image::default(),
+                    cover_path: cover_path.into(),
                 });
             }
         }
         println!("Found {} tracks", tracks.len());
 
+        let (cover_tx, cover_rx) = mpsc::channel();
         Ok(Rc::new(Self {
             weak: window.as_weak(),
             sink,
             timer: slint::Timer::default(),
             track_i: RefCell::new(0),
+            current_track_path: RefCell::new(String::new()),
             tracks,
+            cover_tx,
+            cover_rx: RefCell::new(cover_rx),
         }))
     }
 
@@ -117,7 +160,34 @@ impl Application {
         }
     }
 
+    fn poll_cover_updates(&self) {
+        let receiver = self.cover_rx.borrow();
+
+        while let Ok(update) = receiver.try_recv() {
+            if *self.current_track_path.borrow() != update.track_path {
+                continue;
+            }
+
+            let Some(cover_data) = update.cover_data else {
+                continue;
+            };
+
+            let buffer =
+                slint::SharedPixelBuffer::<slint::Rgba8Pixel>::clone_from_slice(
+                    &cover_data.rgba,
+                    cover_data.width,
+                    cover_data.height,
+                );
+            let mut track = self.window().global::<State>().get_track();
+            track.cover = slint::Image::from_rgba8(buffer);
+            self.window().global::<State>().set_track(track);
+        }
+    }
+
     fn set_playback_to(&self, track: &Track) {
+        let track_path = track.path.to_string();
+        let cover_path = track.cover_path.to_string();
+
         let file = match std::fs::File::open(track.path.as_str()) {
             Ok(f) => f,
             Err(e) => {
@@ -139,9 +209,24 @@ impl Application {
         }
         self.sink.append(source);
         self.sink.play();
+
+        *self.current_track_path.borrow_mut() = track_path.clone();
         {
             let window = self.window();
             window.global::<State>().set_track(track.clone());
+        }
+
+        if !cover_path.is_empty() {
+            let sender = self.cover_tx.clone();
+            std::thread::spawn(move || {
+                let cover_data = if cover_path == "embedded" {
+                    utils::load_small_image_embedded_data(&track_path)
+                } else {
+                    utils::load_small_image_data(&cover_path)
+                };
+
+                let _ = sender.send(CoverUpdate { track_path, cover_data });
+            });
         }
     }
 
@@ -200,6 +285,7 @@ impl Application {
 
                 app.poll_playback();
                 app.poll_advance();
+                app.poll_cover_updates();
             },
         );
     }
