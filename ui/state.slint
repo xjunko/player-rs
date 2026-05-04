@@ -1,0 +1,14 @@
+export struct Track {
+    artist: string,
+    title: string,
+    path: string,
+}
+
+export global State {
+    in property <Track> track;
+    in property <string> current_time_text: "0:00";
+
+    callback play();
+    callback next();
+    callback prev();
+}

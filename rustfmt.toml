@@ -1,0 +1,33 @@
+# xjunko's style of rust, this will be what i used on everything rust i've written.
+reorder_imports = true
+reorder_modules = true
+group_imports = "StdExternalCrate"
+imports_granularity = "Module"
+
+fn_single_line = true
+where_single_line = true
+
+use_small_heuristics = "Max"
+
+fn_params_layout = "Tall"
+
+match_arm_blocks = true
+match_arm_leading_pipes = "Never"
+match_block_trailing_comma = true
+
+trailing_comma = "Vertical"
+
+merge_derives = true
+newline_style = "Unix"
+remove_nested_parens = true
+
+wrap_comments = false
+format_code_in_doc_comments = false
+
+blank_lines_upper_bound = 1
+blank_lines_lower_bound = 0
+
+reorder_impl_items = true
+
+max_width = 80
+comment_width = 80

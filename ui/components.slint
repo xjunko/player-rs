@@ -1,0 +1,47 @@
+export component KKRButton inherits Rectangle {
+    in property <string> icon: ">";
+    in property <length> size: 32px;
+
+    width: root.size;
+    background: transparent;
+
+    callback clicked();
+
+    Rectangle {
+        width: root.size;
+        height: root.size;
+        background: #9d73ec;
+    }
+
+    Text {
+        text: icon;
+        font-size: 16px;
+        font-weight: 700;
+        color: white;
+    }
+
+    area := TouchArea {
+        mouse-cursor: pointer;
+        clicked => {
+            root.clicked()
+        };
+    }
+}
+
+export component KKRPlayButton inherits KKRButton {
+    in property <bool> playing: false;
+
+    Text {
+        text: playing ? "#" : ">";
+        font-size: 16px;
+        font-weight: 700;
+        color: white;
+    }
+
+    area := TouchArea {
+        mouse-cursor: pointer;
+        clicked => {
+            root.clicked()
+        };
+    }
+}
