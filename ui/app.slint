@@ -1,5 +1,5 @@
-import { State } from "./state.slint";
-export { State }
+import { KKRState } from "./state.slint";
+export { KKRState }
 
 import { KKRPlayButton, KKRButton } from "./components.slint";
 import { KKRTextButton } from "components.slint";
@@ -25,7 +25,7 @@ export component AppWindow inherits Window {
                 padding: 8px;
                 spacing: 8px;
 
-                if State.track.cover-path != "": Rectangle {
+                if KKRState.track.cover-path != "": Rectangle {
                     width: 100px;
                     height: 100px;
                     background: white;
@@ -34,7 +34,7 @@ export component AppWindow inherits Window {
                         width: 100%;
                         height: 100%;
                         image-fit: cover;
-                        source: State.track.cover;
+                        source: KKRState.track.cover;
                     }
                 }
 
@@ -44,14 +44,14 @@ export component AppWindow inherits Window {
                     alignment: center;
 
                     Text {
-                        text: State.track.artist;
+                        text: KKRState.track.artist;
                         color: #999;
                         font-size: 13px;
                         overflow: elide;
                     }
 
                     Text {
-                        text: State.track.title;
+                        text: KKRState.track.title;
                         color: white;
                         font-size: 16px;
                         font-weight: 700;
@@ -76,7 +76,7 @@ export component AppWindow inherits Window {
                 padding-left: 16px;
                 alignment: start;
                 Text {
-                    text: State.current_time_text;
+                    text: KKRState.current_time_text;
                     color: #999;
                     font-size: 13px;
                     vertical-alignment: center;
@@ -92,20 +92,20 @@ export component AppWindow inherits Window {
                 KKRTextButton {
                     icon: "<<";
                     clicked => {
-                        State.prev();
+                        KKRState.prev();
                     }
                 }
 
                 KKRPlayButton {
                     clicked => {
-                        State.play();
+                        KKRState.play();
                     }
                 }
 
                 KKRTextButton {
                     icon: ">>";
                     clicked => {
-                        State.next();
+                        KKRState.next();
                     }
                 }
             }

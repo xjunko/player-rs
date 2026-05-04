@@ -1,4 +1,4 @@
-import { State } from "state.slint";
+import { KKRState } from "state.slint";
 
 export component KKRButton inherits Rectangle {
     in property <length> size: 32px;
@@ -34,7 +34,7 @@ export component KKRTextButton inherits KKRButton {
 
 export component KKRPlayButton inherits KKRButton {
     Text {
-        text: State.playing ? "#" : ">";
+        text: KKRState.playing ? "#" : ">";
         font-size: 16px;
         font-weight: 700;
         color: white;

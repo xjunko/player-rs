@@ -7,7 +7,7 @@ use anyhow::Result;
 use slint::{ComponentHandle, SharedString};
 use walkdir::WalkDir;
 
-use crate::{AppWindow, Args, State, Track, utils};
+use crate::{AppWindow, Args, KKRState, KKRTrack, utils};
 
 struct CoverUpdate {
     track_path: String,
@@ -21,7 +21,7 @@ pub struct Application {
 
     track_i: RefCell<usize>,
     current_track_path: RefCell<String>,
-    tracks: Vec<Track>,
+    tracks: Vec<KKRTrack>,
 
     cover_tx: mpsc::Sender<CoverUpdate>,
     cover_rx: RefCell<mpsc::Receiver<CoverUpdate>>,
@@ -93,7 +93,7 @@ impl Application {
                     );
                 }
 
-                tracks.push(Track {
+                tracks.push(KKRTrack {
                     artist: entry
                         .path()
                         .parent()
@@ -131,7 +131,7 @@ impl Application {
 
     fn window(&self) -> AppWindow { self.weak.upgrade().expect("window died") }
 
-    fn track(&self) -> Option<&Track> {
+    fn track(&self) -> Option<&KKRTrack> {
         self.tracks.get(*self.track_i.borrow())
     }
 
@@ -139,11 +139,11 @@ impl Application {
         let pos = self.sink.get_pos().as_secs_f64();
         let window = self.window();
 
-        window.global::<State>().set_current_time_text(SharedString::from(
+        window.global::<KKRState>().set_current_time_text(SharedString::from(
             utils::format_duration_secs(pos),
         ));
 
-        window.global::<State>().set_playing(!self.sink.is_paused());
+        window.global::<KKRState>().set_playing(!self.sink.is_paused());
     }
 
     fn poll_advance(&self) {
@@ -154,7 +154,7 @@ impl Application {
                 self.set_playback_to(track);
             } else {
                 self.window()
-                    .global::<State>()
+                    .global::<KKRState>()
                     .set_current_time_text(SharedString::from("0:00"));
             }
         }
@@ -178,13 +178,13 @@ impl Application {
                     cover_data.width,
                     cover_data.height,
                 );
-            let mut track = self.window().global::<State>().get_track();
+            let mut track = self.window().global::<KKRState>().get_track();
             track.cover = slint::Image::from_rgba8(buffer);
-            self.window().global::<State>().set_track(track);
+            self.window().global::<KKRState>().set_track(track);
         }
     }
 
-    fn set_playback_to(&self, track: &Track) {
+    fn set_playback_to(&self, track: &KKRTrack) {
         let track_path = track.path.to_string();
         let cover_path = track.cover_path.to_string();
 
@@ -213,7 +213,7 @@ impl Application {
         *self.current_track_path.borrow_mut() = track_path.clone();
         {
             let window = self.window();
-            window.global::<State>().set_track(track.clone());
+            window.global::<KKRState>().set_track(track.clone());
         }
 
         if !cover_path.is_empty() {
@@ -232,7 +232,7 @@ impl Application {
 
     fn register_play_pause(self: &Rc<Self>) {
         let app = self.clone();
-        self.window().global::<State>().on_play(move || {
+        self.window().global::<KKRState>().on_play(move || {
             if app.sink.empty() {
                 if let Some(track) = app.track() {
                     app.set_playback_to(track);
@@ -250,7 +250,7 @@ impl Application {
 
     fn register_next(self: &Rc<Self>) {
         let app = self.clone();
-        self.window().global::<State>().on_next(move || {
+        self.window().global::<KKRState>().on_next(move || {
             let cur_i = *app.track_i.borrow();
             *app.track_i.borrow_mut() =
                 (cur_i + app.tracks.len() + 1) % app.tracks.len();
@@ -262,7 +262,7 @@ impl Application {
 
     fn register_prev(self: &Rc<Self>) {
         let app = self.clone();
-        self.window().global::<State>().on_prev(move || {
+        self.window().global::<KKRState>().on_prev(move || {
             let cur_i = *app.track_i.borrow();
             *app.track_i.borrow_mut() =
                 (cur_i + app.tracks.len() - 1) % app.tracks.len();
