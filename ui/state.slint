@@ -6,6 +6,7 @@ export struct Track {
 
 export global State {
     in property <Track> track;
+    in property <bool> playing;
     in property <string> current_time_text: "0:00";
 
     callback play();

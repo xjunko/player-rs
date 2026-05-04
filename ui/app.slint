@@ -2,6 +2,7 @@ import { State } from "./state.slint";
 export { State }
 
 import { KKRPlayButton, KKRButton } from "./components.slint";
+import { KKRTextButton } from "components.slint";
 
 export component AppWindow inherits Window {
     width: 400px;
@@ -75,7 +76,7 @@ export component AppWindow inherits Window {
                 alignment: end;
                 spacing: 4px;
 
-                KKRButton {
+                KKRTextButton {
                     icon: "<<";
                     clicked => {
                         State.prev();
@@ -88,7 +89,7 @@ export component AppWindow inherits Window {
                     }
                 }
 
-                KKRButton {
+                KKRTextButton {
                     icon: ">>";
                     clicked => {
                         State.next();

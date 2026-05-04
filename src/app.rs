@@ -99,6 +99,8 @@ impl Application {
         window.global::<State>().set_current_time_text(SharedString::from(
             utils::format_duration_secs(pos),
         ));
+
+        window.global::<State>().set_playing(!self.sink.is_paused());
     }
 
     fn poll_advance(&self) {

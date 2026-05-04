@@ -1,5 +1,6 @@
+import { State } from "state.slint";
+
 export component KKRButton inherits Rectangle {
-    in property <string> icon: ">";
     in property <length> size: 32px;
 
     width: root.size;
@@ -13,13 +14,6 @@ export component KKRButton inherits Rectangle {
         background: #9d73ec;
     }
 
-    Text {
-        text: icon;
-        font-size: 16px;
-        font-weight: 700;
-        color: white;
-    }
-
     area := TouchArea {
         mouse-cursor: pointer;
         clicked => {
@@ -28,11 +22,19 @@ export component KKRButton inherits Rectangle {
     }
 }
 
-export component KKRPlayButton inherits KKRButton {
-    in property <bool> playing: false;
-
+export component KKRTextButton inherits KKRButton {
+    in property <string> icon: ">";
     Text {
-        text: playing ? "#" : ">";
+        text: icon;
+        font-size: 16px;
+        font-weight: 700;
+        color: white;
+    }
+}
+
+export component KKRPlayButton inherits KKRButton {
+    Text {
+        text: State.playing ? "#" : ">";
         font-size: 16px;
         font-weight: 700;
         color: white;
